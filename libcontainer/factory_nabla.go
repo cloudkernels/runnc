@@ -165,9 +165,15 @@ func (l *NablaFactory) Create(id string, config *configs.Config) (Container, err
 			return nil, err
 		}
 	} else {
-		fsPath, err = createRootfsISO(config, containerRoot)
-		if err != nil {
-			return nil, err
+		rootfsPath := config.Rootfs
+		fsPath = filepath.Join(rootfsPath, "rootfs.iso")
+		if _, err := os.Stat(fsPath); err == nil {
+			//File exists, just fall through
+		} else {
+			fsPath, err = createRootfsISO(config, containerRoot)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
