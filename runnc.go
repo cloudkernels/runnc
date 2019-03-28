@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/pprof"
 	"strings"
 
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -135,6 +136,13 @@ func main() {
 		}
 		return nil
 	}
+
+	f, err := os.Create("/home/bchalios/runnc.prof")
+	if err != nil {
+		fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
 
 	// If the command returns an error, cli takes upon itself to print
 	// the error on cli.ErrWriter and exit.
