@@ -23,6 +23,7 @@ import (
 
 	"github.com/opencontainers/runtime-spec/specs-go"
 
+	"github.com/nabla-containers/runnc/runnc-cont"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -137,12 +138,12 @@ func main() {
 		return nil
 	}
 
-	f, err := os.Create("/home/bchalios/runnc.prof")
+	f, err := os.Create("/tmp/runnc.prof")
 	if err != nil {
 		fatal(err)
 	}
+	runnc_cont.ProfFile = f
 	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
 
 	// If the command returns an error, cli takes upon itself to print
 	// the error on cli.ErrWriter and exit.
@@ -151,6 +152,8 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		fatal(err)
 	}
+
+	f.Close()
 }
 
 type FatalWriter struct {

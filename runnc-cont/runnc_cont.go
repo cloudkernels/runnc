@@ -22,14 +22,17 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"syscall"
 
 	"github.com/nabla-containers/runnc/nabla-lib/network"
-	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
+	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
+
+var ProfFile *os.File
 
 type RunncCont struct {
 	// NablaRunBin is the path to 'nabla-run' binary.
@@ -216,6 +219,9 @@ func (r *RunncCont) Run() error {
 	}
 	newenv = append(newenv, "LD_LIBRARY_PATH=/lib64")
 
+	fmt.Printf("Stopping CPU profiler inside unikernel\n")
+	pprof.StopCPUProfile()
+	ProfFile.Close()
 	err = syscall.Exec(r.NablaRunBin, args, newenv)
 	if err != nil {
 		return fmt.Errorf("Err from execve: %v\n", err)
