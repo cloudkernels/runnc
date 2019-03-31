@@ -153,7 +153,8 @@ func main() {
 		fatal(err)
 	}
 
-	f.Close()
+	pprof.StopCPUProfile()
+	//f.Close()
 }
 
 type FatalWriter struct {

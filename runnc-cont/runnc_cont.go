@@ -221,11 +221,12 @@ func (r *RunncCont) Run() error {
 
 	fmt.Printf("Stopping CPU profiler inside unikernel\n")
 	pprof.StopCPUProfile()
-	ProfFile.Close()
+	//ProfFile.Close()
 	err = syscall.Exec(r.NablaRunBin, args, newenv)
 	if err != nil {
 		return fmt.Errorf("Err from execve: %v\n", err)
 	}
+	pprof.StartCPUProfile(ProfFile)
 
 	return nil
 }
