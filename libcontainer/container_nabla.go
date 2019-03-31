@@ -29,6 +29,7 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 	"github.com/nabla-containers/runnc/nabla-lib/network"
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/opencontainers/runc/libcontainer/system"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/pkg/errors"
@@ -174,6 +175,10 @@ func NewSockPair(name string) (parent *os.File, child *os.File, err error) {
 }
 
 func (c *nablaContainer) start(p *Process) error {
+	profileStart := profile.NewProfile("nabla-container-start")
+	profileStart.Start()
+	defer profileStart.Stop()
+
 	parentPipe, childPipe, err := NewSockPair("init")
 	if err != nil {
 		return newSystemErrorWithCause(err, "creating new init pipe")
@@ -244,6 +249,10 @@ func (c *nablaContainer) start(p *Process) error {
 }
 
 func (c *nablaContainer) exec() error {
+	profileExec := profile.NewProfile("nabla-container-exec")
+	profileExec.Start()
+	defer profileExec.Stop()
+
 	path := filepath.Join(c.root, execFifoFilename)
 	f, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {

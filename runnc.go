@@ -20,6 +20,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/opencontainers/runtime-spec/specs-go"
 
 	"github.com/sirupsen/logrus"
@@ -56,6 +57,12 @@ value for "bundle" is the current directory.`
 )
 
 func main() {
+	profile.Init("/tmp/runnc.prof")
+	profileTotal := profile.NewProfile("total execution time")
+	profileTotal.Start()
+	defer profile.WriteProfiles()
+	defer profileTotal.Stop()
+
 	app := cli.NewApp()
 	app.Name = "runnc"
 	app.Usage = usage

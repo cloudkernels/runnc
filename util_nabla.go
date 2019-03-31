@@ -23,6 +23,7 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -47,6 +48,9 @@ func getContainer(context *cli.Context) (libcontainer.Container, error) {
 }
 
 func startContainer(context *cli.Context, spec *specs.Spec, create bool) (int, error) {
+	profileStart := profile.NewProfile("start-container")
+	profileStart.Start()
+	defer profileStart.Stop()
 	id := context.Args().First()
 	if id == "" {
 		return -1, errEmptyID

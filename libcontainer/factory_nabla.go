@@ -26,9 +26,10 @@ import (
 
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 
-	"github.com/nabla-containers/runnc/utils"
 	"github.com/nabla-containers/runnc/nabla-lib/network"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
+	"github.com/nabla-containers/runnc/profile"
+	"github.com/nabla-containers/runnc/utils"
 
 	"github.com/pkg/errors"
 )
@@ -216,6 +217,10 @@ func (l *NablaFactory) Load(id string) (Container, error) {
 }
 
 func (l *NablaFactory) StartInitialization() error {
+	profileInitNabla := profile.NewProfile("init-nabla")
+	profileInitNabla.Start()
+	defer profileInitNabla.Stop()
+
 	return initNabla()
 }
 

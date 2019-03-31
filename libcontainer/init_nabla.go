@@ -23,6 +23,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/nabla-containers/runnc/runnc-cont"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/vishvananda/netns"
@@ -80,6 +81,10 @@ type initConfig struct {
 }
 
 func initNabla() error {
+	profileInit := profile.NewProfile("InitNabla")
+	profileInit.Start()
+	defer profileInit.Stop()
+
 	var (
 		pipefd, rootfd int
 		envInitPipe    = os.Getenv("_LIBCONTAINER_INITPIPE")
