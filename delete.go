@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/nabla-containers/runnc/libcontainer"
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/urfave/cli"
 )
 
@@ -45,6 +46,11 @@ status of "ubuntu01" as "stopped" the following will delete resources held for
 		},
 	},
 	Action: func(context *cli.Context) error {
+		profile.Init("/tmp/runnc_delete.prof")
+		profileTotal := profile.NewProfile("total execution time")
+		profileTotal.Start()
+		defer profile.WriteProfiles()
+		defer profileTotal.Stop()
 
 		id := context.Args().First()
 		container, err := getContainer(context)

@@ -27,7 +27,7 @@ func NewProfile(name string) *Profile {
 	ret := &Profile{name: name}
 	profiles = append(profiles, ret)
 
-	str := fmt.Sprintf("Creating new profile with name %s\n", name)
+	str := fmt.Sprintf("Creating new profile: '%s'\n", name)
 	logFile.WriteString(str)
 
 	return ret
@@ -37,6 +37,7 @@ func (p *Profile) Start() {
 	if p.on {
 		str := fmt.Sprintf("Profile %s already started\n", p.name)
 		logFile.WriteString(str)
+		return
 	}
 
 	p.last = time.Now()
@@ -47,6 +48,7 @@ func (p *Profile) Stop() {
 	if !p.on {
 		str := fmt.Sprintf("Profile %s not started\n", p.name)
 		logFile.WriteString(str)
+		return
 	}
 
 	p.elapsed += time.Now().Sub(p.last)
@@ -58,7 +60,7 @@ func (p *Profile) String() string {
 }
 
 func Init(profFileName string) error {
-	f, err := os.Create(profFileName)
+	f, err := os.OpenFile(profFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
 	}

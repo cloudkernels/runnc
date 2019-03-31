@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"github.com/nabla-containers/runnc/profile"
 )
 
 var signalMap = map[string]syscall.Signal{
@@ -82,6 +84,11 @@ signal to the init process of the "ubuntu01" container:
 		},
 	},
 	Action: func(context *cli.Context) error {
+		profile.Init("/tmp/runnc_kill.prof")
+		profileTotal := profile.NewProfile("total execution time")
+		profileTotal.Start()
+		defer profile.WriteProfiles()
+		defer profileTotal.Stop()
 
 		container, err := getContainer(context)
 		if err != nil {

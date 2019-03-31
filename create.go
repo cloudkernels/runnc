@@ -17,6 +17,7 @@ package main
 import (
 	"os"
 
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/urfave/cli"
 )
 
@@ -65,6 +66,12 @@ to specify command(s) that get run when the container is started.
 		},
 	},
 	Action: func(context *cli.Context) error {
+		profile.Init("/tmp/runnc_init.prof")
+		profileTotal := profile.NewProfile("total execution time")
+		profileTotal.Start()
+		defer profile.WriteProfiles()
+		defer profileTotal.Stop()
+
 		// TODO: Implement
 		spec, err := setupSpec(context)
 		if err != nil {

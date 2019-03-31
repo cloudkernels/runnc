@@ -16,6 +16,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/opencontainers/runc/libcontainer/utils"
 	"github.com/urfave/cli"
 	"os"
@@ -31,6 +32,12 @@ Where "<container-id>" is your name for the instance of the container.`,
 	Description: `The state command outputs current state information for the
 instance of a container.`,
 	Action: func(context *cli.Context) error {
+		profile.Init("/tmp/runnc_state.prof")
+		profileTotal := profile.NewProfile("total execution time")
+		profileTotal.Start()
+		defer profile.WriteProfiles()
+		defer profileTotal.Stop()
+
 		// TODO: implement
 		container, err := getContainer(context)
 		if err != nil {
