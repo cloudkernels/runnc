@@ -20,6 +20,7 @@ package runnc_cont
 import (
 	"fmt"
 	"net"
+	"time"
 	"os"
 	"os/exec"
 	"strconv"
@@ -135,6 +136,7 @@ func (r *RunncCont) Run() error {
 		err error
 	)
 
+	start := time.Now()
 	disk, err := setupDisk(r.Disk)
 	if err != nil {
 		return fmt.Errorf("could not setup the disk: %v", err)
@@ -216,10 +218,19 @@ func (r *RunncCont) Run() error {
 	}
 	newenv = append(newenv, "LD_LIBRARY_PATH=/lib64")
 
+    t := time.Now()
+    elapsed := t.Sub(start)
+    start = t
+	fmt.Fprintln(os.Stdout, "init: ", elapsed);
+
 	err = syscall.Exec(r.NablaRunBin, args, newenv)
 	if err != nil {
 		return fmt.Errorf("Err from execve: %v\n", err)
 	}
+
+    t = time.Now()
+    elapsed = t.Sub(start)
+	fmt.Fprintln(os.Stdout, "all: %d", elapsed);
 
 	return nil
 }
