@@ -27,8 +27,9 @@ import (
 	"syscall"
 
 	"github.com/nabla-containers/runnc/nabla-lib/network"
-	spec "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
+	"github.com/nabla-containers/runnc/profile"
+	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
 type RunncCont struct {
@@ -215,6 +216,9 @@ func (r *RunncCont) Run() error {
 		}
 	}
 	newenv = append(newenv, "LD_LIBRARY_PATH=/lib64")
+
+	//! Stop the profile before we enter the unikernel
+	profile.WriteProfiles()
 
 	err = syscall.Exec(r.NablaRunBin, args, newenv)
 	if err != nil {

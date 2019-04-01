@@ -72,6 +72,9 @@ func Init(profFileName string) error {
 
 func WriteProfiles() {
 	for _, p := range profiles {
+		if p.on {
+			p.Stop()
+		}
 		logFile.WriteString(p.String() + "\n")
 	}
 	logFile.Close()

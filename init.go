@@ -22,6 +22,7 @@ import (
 	"runtime"
 
 	"github.com/nabla-containers/runnc/libcontainer"
+	"github.com/nabla-containers/runnc/profile"
 	"github.com/urfave/cli"
 )
 
@@ -36,6 +37,12 @@ var initCommand = cli.Command{
 	Name:  "init",
 	Usage: `initialize the namespaces and launch the process (do not call it outside of runc)`,
 	Action: func(context *cli.Context) error {
+		profile.Init("/tmp/runnc_init.prof")
+		profileTotal := profile.NewProfile("total execution time")
+		// We will stop this profile just before entering the Unikernel.
+		// runnc invokes the unikernel using `execve`, so we'll never
+		// return here.
+		profileTotal.Start()
 		factory, _ := libcontainer.New("")
 		if err := factory.StartInitialization(); err != nil {
 			// as the error is sent back to the parent there is no need to log
