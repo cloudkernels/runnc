@@ -54,7 +54,11 @@ func newRunncCont(containerRoot string, cfg configs.Config, networkMap map[strin
 	}
 
 	if !strings.HasSuffix(cfg.Args[0], ".nabla") {
-		return nil, fmt.Errorf("entrypoint is not a .nabla file")
+		if strings.HasSuffix(cfg.Args[0], ".hvt") {
+			NablaRunBin = NablaBinDir + "hvt-run"
+		} else {
+			return nil, fmt.Errorf("entrypoint is not a .nabla file")
+		}
 	}
 
 	cidr, err := strconv.Atoi(networkMap["IPMask"])

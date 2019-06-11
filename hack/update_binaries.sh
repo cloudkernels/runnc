@@ -23,7 +23,7 @@ BIN_PATH=/usr/local/bin/
 # to be consumed directly by the user.
 BIN_PATH2=/opt/runnc/bin/
 
-COPY_BINS=("runnc" "nabla-run")
+COPY_BINS=("runnc" "nabla-run" "hvt-run")
 
 if [[ $1 == "delete" ]]
 then

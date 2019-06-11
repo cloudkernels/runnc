@@ -46,7 +46,7 @@ RELEASE_VER=v0.3
 
 RELEASE_SERVER=https://github.com/nabla-containers/nabla-base-build/releases/download/${RELEASE_VER}/
 
-build: submodule_warning godep build/runnc build/nabla-run test_images
+build: submodule_warning godep build/runnc build/nabla-run build/hvt-run test_images
 
 container-build:
 	sudo docker build . -f Dockerfile.build -t runnc-build
@@ -87,6 +87,9 @@ solo5/tests/test_hello/test_hello.spt: FORCE
 build/nabla-run: solo5/tenders/spt/solo5-spt
 	install -m 775 -D $< $@
 
+build/hvt-run: solo5/tenders/hvt/solo5-hvt
+	install -m 775 -D $< $@
+
 tests/integration/node.nabla:
 	wget -nc ${RELEASE_SERVER}/node-${ARCH}.nabla -O $@ && chmod +x $@
 
@@ -96,7 +99,7 @@ tests/integration/test_hello.nabla: solo5/tests/test_hello/test_hello.spt
 tests/integration/test_curl.nabla:
 	wget -nc ${RELEASE_SERVER}/test_curl-${ARCH}.nabla -O $@ && chmod +x $@
 
-install: build/runnc build/nabla-run
+install: build/runnc build/nabla-run build/hvt-run
 	sudo hack/update_binaries.sh
 
 .PHONY: test,container-integration-test,local-integration-test,integration,integration-make
