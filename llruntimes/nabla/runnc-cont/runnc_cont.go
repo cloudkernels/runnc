@@ -170,7 +170,7 @@ func (r *RunncCont) Run() error {
 			unikernelArgs}
 	} else {
 		args = []string{r.NablaRunBin,
-			"--x-exec-heap",
+			//"--x-exec-heap", //Temporarily disable this option for hvt
 			"--mem=" + strconv.FormatInt(r.Memory, 10),
 			"--net=" + r.Tap,
 			"--disk=" + disk,
