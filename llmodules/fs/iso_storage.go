@@ -49,9 +49,7 @@ func createRootfsISO(config *configs.Config, containerRoot string) (string, erro
 		return "", errors.Wrap(err, "Unable to create "+filepath.Join(rootfsPath, "/etc"))
 	}
 	for _, mount := range config.Mounts {
-		if (mount.Destination == "/etc/resolv.conf") ||
-			(mount.Destination == "/etc/hosts") ||
-			(mount.Destination == "/etc/hostname") {
+		if (mount.Type == "bind") {
 			dest := filepath.Join(rootfsPath, mount.Destination)
 			source := mount.Source
 			if err := utils.Copy(dest, source); err != nil {
