@@ -51,7 +51,7 @@ type RunncCont struct {
 	Memory int64
 
 	// Disk is the path to disk
-	Disk string
+	Disk []string
 
 	// WorkingDir current working directory.
 	WorkingDir string
@@ -94,7 +94,7 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 		}
 		mac = cfg.Mac
 	}
-
+        fmt.Println("NewrunncCont about to return")
 	return &RunncCont{
 		NablaRunBin:  cfg.NablaRunBin,
 		NablaRunArgs: cfg.NablaRunArgs,
@@ -105,7 +105,7 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 		Gateway:      gateway,
 		Mac:          mac,
 		Memory:       cfg.Memory,
-		Disk:         cfg.Disk[0],
+		Disk:         cfg.Disk,
 		WorkingDir:   cfg.WorkingDir,
 		Env:          cfg.Env,
 		Mounts:       cfg.Mounts,
@@ -138,7 +138,8 @@ func (r *RunncCont) Run() error {
 		err error
 	)
 
-	disk, err := setupDisk(r.Disk)
+	disk, err := setupDisk(r.Disk[0])
+	disk2, err := setupDisk(r.Disk[1])
 	if err != nil {
 		return fmt.Errorf("could not setup the disk: %v", err)
 	}
@@ -153,11 +154,13 @@ func (r *RunncCont) Run() error {
 		r.UniKernelBin = unikernel
 	}
 
+        fmt.Println("CALL CreateRumpRunArgs")
 	unikernelArgs, err := CreateRumprunArgs(r.IPAddress, r.IPMask, r.Gateway, "/",
 		r.Env, r.WorkingDir, r.UniKernelBin, r.NablaRunArgs)
 	if err != nil {
 		return fmt.Errorf("could not create the unikernel cmdline: %v\n", err)
 	}
+        fmt.Println("CreateRumpRunArgs RETURNED")
 
 	var args []string
 	if mac != "" {
@@ -166,7 +169,7 @@ func (r *RunncCont) Run() error {
 			"--mem=" + strconv.FormatInt(r.Memory, 10),
 			"--net-mac=" + mac,
 			"--net=" + r.Tap,
-			"--disk=" + disk,
+			"--disk=" + disk + "," + disk2,
 			r.UniKernelBin,
 			unikernelArgs}
 	} else {
@@ -174,7 +177,7 @@ func (r *RunncCont) Run() error {
 			"--x-exec-heap",
 			"--mem=" + strconv.FormatInt(r.Memory, 10),
 			"--net=" + r.Tap,
-			"--disk=" + disk,
+			"--disk=" + disk + "," + disk2,
 			r.UniKernelBin,
 			unikernelArgs}
 	}

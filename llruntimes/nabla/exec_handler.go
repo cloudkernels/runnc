@@ -67,7 +67,7 @@ func newRunncCont(containerRoot string, cfg configs.Config, networkMap map[strin
 		UniKernelBin: filepath.Join(containerRoot, cfg.Args[0]),
 		Memory:       cfg.Memory,
 		Tap:          networkMap["TapName"],
-		Disk:         []string{fsMap["FsPath"]},
+		Disk:         []string{fsMap["FsPath"], fsMap["StorPath"]},
 		WorkingDir:   cfg.Cwd,
 		Env:          cfg.Env,
 		NablaRunArgs: cfg.Args[1:],

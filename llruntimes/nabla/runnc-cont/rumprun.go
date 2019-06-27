@@ -49,7 +49,7 @@ type rumpArgsBlock struct {
 type rumpArgs struct {
 	Cmdline string          `json:"cmdline"`
 	Net     rumpArgsNetwork `json:"net"`
-	Blk     *rumpArgsBlock  `json:"blk,omitempty"`
+	Blk     []*rumpArgsBlock  `json:"blk,omitempty"`
 	Env     []string        `json:"env,omitempty"`
 	Cwd     string          `json:"cwd,omitempty"`
 	Mem     string          `json:"mem,omitempty"`
@@ -135,11 +135,20 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 	if mountPoint != "" {
 		block := rumpArgsBlock{
 			Source: "etfs",
-			Path:   "/dev/ld0a",
+			Path:   "hda0",
 			Fstype: "blk",
 			Mount:  mountPoint,
 		}
-		ra.Blk = &block
+		fmt.Println("created first block, creating second")
+		block2 := rumpArgsBlock{
+			Source: "etfs",
+			Path:   "hdb0",
+			Fstype: "blk",
+			Mount:  mountPoint,
+		}
+		fmt.Println("created second block")
+		ra.Blk[0] = &block
+		ra.Blk[1] = &block2
 	}
 
 	if len(envVars) > 0 {
