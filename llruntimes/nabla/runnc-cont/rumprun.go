@@ -49,7 +49,7 @@ type rumpArgsBlock struct {
 type rumpArgs struct {
 	Cmdline string          `json:"cmdline"`
 	Net     rumpArgsNetwork `json:"net"`
-	Blk     *rumpArgsBlock  `json:"blk,omitempty"`
+	Blk     *[]rumpArgsBlock  `json:"blk,omitempty"`
 	Env     []string        `json:"env,omitempty"`
 	Cwd     string          `json:"cwd,omitempty"`
 	Mem     string          `json:"mem,omitempty"`
@@ -105,7 +105,7 @@ func (ra *rumpArgs) MarshalJSON() ([]byte, error) {
 // CreateRumprunArgs returns the cmdline string for rumprun (a json)
 func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 	mountPoint string, envVars []string, cwd string,
-	unikernel string, cmdargs []string) (string, error) {
+	unikernel string, cmdargs []string, disks []string) (string, error) {
 
 	// XXX: Due to bug in: https://github.com/nabla-containers/runnc/issues/40
 	// If we detect a /32 mask, we set it to 1 as a "fix", and hope we are in
@@ -132,6 +132,7 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 		Cmdline: strings.Join(cmdline, " "),
 		Net:     net,
 	}
+	var blocks []rumpArgsBlock
 	if mountPoint != "" {
 		block := rumpArgsBlock{
 			Source: "etfs",
@@ -139,8 +140,42 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 			Fstype: "blk",
 			Mount:  mountPoint,
 		}
-		ra.Blk = &block
+		blocks = append(blocks, block)
 	}
+
+	for i := 1; i < len(disks); i++ {
+		block := rumpArgsBlock{
+			Source: "etfs",
+			Path:   "/dev/ld"+strconv.Itoa(i)+"a",
+			Fstype: "blk",
+			Mount:  "file"+strconv.Itoa(i),
+		}
+		blocks = append(blocks, block)
+	}
+	ra.Blk = &blocks
+	//if mountPoint != "" {
+	//	block := []rumpArgsBlock{
+	//		rumpArgsBlock {
+	//		Source: "etfs",
+	//		Path:   "/dev/ld0a",
+	//		Fstype: "blk",
+	//		Mount:  mountPoint,
+	//	},
+	//		rumpArgsBlock {
+	//		Source: "etfs",
+	//		Path:   "/dev/ld0a",
+	//		Fstype: "blk",
+	//		Mount:  mountPoint,
+	//	},
+	//		rumpArgsBlock {
+	//		Source: "etfs",
+	//		Path:   "/dev/ld0a",
+	//		Fstype: "blk",
+	//		Mount:  mountPoint,
+	//	},
+	//	}
+	//	ra.Blk = &block
+	//}
 
 	if len(envVars) > 0 {
 		ra.Env = envVars
