@@ -51,7 +51,7 @@ type RunncCont struct {
 	Memory int64
 
 	// Disk is the path to disk
-	Disk string
+	Disk []string
 
 	// WorkingDir current working directory.
 	WorkingDir string
@@ -105,31 +105,37 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 		Gateway:      gateway,
 		Mac:          mac,
 		Memory:       cfg.Memory,
-		Disk:         cfg.Disk[0],
+		Disk:         cfg.Disk,
 		WorkingDir:   cfg.WorkingDir,
 		Env:          cfg.Env,
 		Mounts:       cfg.Mounts,
 	}, nil
 }
 
-func setupDisk(path string) (string, error) {
-	if path == "" {
-		return storage.CreateDummy()
+func setupDisk(path []string) ([]string, error) {
+	var paths []string
+	paths = append(paths, path[0])
+	paths = append(paths, strings.Split(path[1], ",")...)
+	if path[0] == "" {
+		tmppath, er := storage.CreateDummy()
+		paths[0] = tmppath
+		return paths, er
 	}
 
-	pathInfo, err := os.Stat(path)
+	pathInfo, err := os.Stat(path[0])
 	if err != nil {
-		return "", fmt.Errorf(
-			"can not find the disk or directory %s", path)
+		return nil, fmt.Errorf(
+			"can not find the disk or directory %s", path[0])
 	}
 
 	if pathInfo.Mode()&os.ModeDir != 0 {
 		// path is a dir, so we flat it to an iso disk
-		return "", fmt.Errorf("input storage %s is not an ISO", path)
+		return nil, fmt.Errorf("input storage %s is not an ISO", path[0])
 	}
 
+	// TODO: Otan exw to dir me ta iso tha prepei na elegxw an einai komple to dir kai an einai iso opws kanei parapanw
 	// "path" is a file, so we treat it like a disk
-	return path, nil
+	return paths, nil
 }
 
 func (r *RunncCont) Run() error {
@@ -154,7 +160,7 @@ func (r *RunncCont) Run() error {
 	}
 
 	unikernelArgs, err := CreateRumprunArgs(r.IPAddress, r.IPMask, r.Gateway, "/",
-		r.Env, r.WorkingDir, r.UniKernelBin, r.NablaRunArgs)
+		r.Env, r.WorkingDir, r.UniKernelBin, r.NablaRunArgs, disk)
 	if err != nil {
 		return fmt.Errorf("could not create the unikernel cmdline: %v\n", err)
 	}
@@ -166,7 +172,7 @@ func (r *RunncCont) Run() error {
 			"--mem=" + strconv.FormatInt(r.Memory, 10),
 			"--net-mac=" + mac,
 			"--net=" + r.Tap,
-			"--disk=" + disk,
+			"--disk=" + strings.Join(disk[:], ","),
 			r.UniKernelBin,
 			unikernelArgs}
 	} else {
@@ -174,7 +180,7 @@ func (r *RunncCont) Run() error {
 			"--x-exec-heap",
 			"--mem=" + strconv.FormatInt(r.Memory, 10),
 			"--net=" + r.Tap,
-			"--disk=" + disk,
+			"--disk=" + strings.Join(disk[:], ","),
 			r.UniKernelBin,
 			unikernelArgs}
 	}
