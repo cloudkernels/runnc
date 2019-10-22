@@ -7,6 +7,7 @@ import (
 type Config struct {
 	Args   []string `json:"args"`
 	Rootfs string   `json:"rootfs"`
+	IsoPaths string  `json:"isopaths"`
 	Env    []string `json:"env"`
 	Cwd    string   `json:"cwd"`
 
