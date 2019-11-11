@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"io/ioutil"
-
+	//"fmt"
 	"strings"
 	"github.com/nabla-containers/runnc/libcontainer/configs"
 	ll "github.com/nabla-containers/runnc/llif"
@@ -54,11 +54,10 @@ func findAllISOs(config *configs.Config) (string, error) {
 		return "",err
 	}
 	for _, f := range files {
-		isoFilePath := filepath.Join(isoPath, f.Name())
-		if err != nil {
-			return "",err
+		if filepath.Ext(f.Name()) == ".ffs" {
+			isoFilePath := filepath.Join(isoPath, f.Name())
+			isos = append(isos, isoFilePath)
 		}
-		isos = append(isos, isoFilePath)
 	}
 	return strings.Join(isos, ","),nil
 }
@@ -69,8 +68,17 @@ func createRootfsISO(config *configs.Config, containerRoot string) (string, erro
 	// TODO: na doume pws tha erxetai apo to docker to directory me ta isos 
 	// gia thn wra tha ftiaksw ena direcotry opou tha periexei kapoia isos kai 
 	// tha xrhsimopoiw auta
-	rootfsPath := config.Rootfs
-	targetISOPath := filepath.Join(containerRoot, "rootfs.iso")
+	//rootfsPath := config.Rootfs
+	//rootfsPath, _ = filepath.Abs("/tmp");
+        tmp_dir, _ := ioutil.TempDir(config.Rootfs, "nabla-rootfs")
+        //tmp_dir, _ := ioutil.TempDir("/tmp/", "nabla-rootfs")
+        //rootfsPath := config.Rootfs
+        rootfsPath := tmp_dir
+	targetISOPath := filepath.Join(containerRoot, "rootfs.ffs")
+	//rootfsPath = filepath.Join(rootfsPath, "/etc")
+	//targetISOPath := filepath.Join(rootfsPath, "rootfs.ffs")
+	//fmt.Fprintln(os.Stderr, containerRoot)
+	//fmt.Fprintln(os.Stderr, rootfsPath)
 	if err := os.MkdirAll(filepath.Join(rootfsPath, "/etc"), 0755); err != nil {
 		return "", errors.Wrap(err, "Unable to create "+filepath.Join(rootfsPath, "/etc"))
 	}
@@ -85,7 +93,8 @@ func createRootfsISO(config *configs.Config, containerRoot string) (string, erro
 			}
 		}
 	}
-	_, err := storage.CreateIso(rootfsPath, &targetISOPath)
+	//_, err := storage.CreateIso(rootfsPath, &targetISOPath)
+        _, err := storage.CreateFfs(rootfsPath, &targetISOPath)
 	if err != nil {
 		return "", errors.Wrap(err, "Error creating iso from rootfs")
 	}

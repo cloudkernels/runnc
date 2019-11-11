@@ -97,7 +97,7 @@ func createContainer(context *cli.Context, llcHandler ll.RunllcHandler, id strin
 		return nil, err
 	}
 
-	config.IsoPaths = "/home/debian/dirisos"
+	config.IsoPaths = config.Rootfs
 	return factory.Create(id, config)
 }
 

@@ -136,9 +136,10 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 	if mountPoint != "" {
 		block := rumpArgsBlock{
 			Source: "etfs",
-			Path:   "/dev/ld0a",
+			Path:   "hda0",
 			Fstype: "blk",
-			Mount:  mountPoint,
+			//Mount:  mountPoint,
+			Mount:  "/var/blk" + "/hda0",
 		}
 		blocks = append(blocks, block)
 	}
@@ -146,9 +147,9 @@ func CreateRumprunArgs(ip net.IP, mask net.IPMask, gw net.IP,
 	for i := 1; i < len(disks); i++ {
 		block := rumpArgsBlock{
 			Source: "etfs",
-			Path:   "/dev/ld"+strconv.Itoa(i)+"a",
+			Path:   "hda"+strconv.Itoa(i),
 			Fstype: "blk",
-			Mount:  "file"+strconv.Itoa(i),
+			Mount:  "/var/blk" + "/hda" + strconv.Itoa(i),
 		}
 		blocks = append(blocks, block)
 	}

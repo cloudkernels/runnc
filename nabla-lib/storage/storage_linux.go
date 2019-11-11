@@ -32,9 +32,51 @@ func CreateDummy() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if _, err := file.Write([]byte("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")); err != nil {
+		file.Close()
+		return "", err
+	}
+
 	return file.Name(), nil
 }
 
+// CreateFFS creates an FFS from the dir argument
+func CreateFfs(dir string, target *string) (string, error) {
+	var fname string
+
+	if target == nil {
+		f, err := ioutil.TempFile("/tmp", "nabla")
+		if err != nil {
+			return "", err
+		}
+
+		fname = f.Name()
+		if err := f.Close(); err != nil {
+			return "", err
+		}
+	} else {
+		var err error
+		fname, err = filepath.Abs(*target)
+		if err != nil {
+			return "", errors.Wrap(err, "Unable to resolve abs target path")
+		}
+	}
+
+	absDir, err := filepath.Abs(dir)
+	if err != nil {
+		return "", errors.Wrap(err, "Unable to resolve abs dir path")
+	}
+
+	//fmt.Fprintln(os.Stderr, absDir)
+	//fmt.Fprintln(os.Stderr, fname)
+	cmd := exec.Command("rumprun-makefs.sh", fname, absDir)
+	err = cmd.Run()
+	if err != nil {
+		return "", errors.Wrap(err, "Unable to run geniso command")
+	}
+
+	return fname, nil
+}
 // CreateIso creates an ISO from the dir argument
 func CreateIso(dir string, target *string) (string, error) {
 	var fname string
@@ -62,9 +104,13 @@ func CreateIso(dir string, target *string) (string, error) {
 		return "", errors.Wrap(err, "Unable to resolve abs dir path")
 	}
 
+	//fmt.Fprintln(os.Stderr, absDir)
+	//fmt.Fprintln(os.Stderr, fname)
 	cmd := exec.Command("genisoimage", "-m", "dev", "-m", "sys",
 		"-m", "proc", "-l", "-r", "-o", fname, absDir)
 	err = cmd.Run()
+	//fmt.Fprintln(os.Stderr, err)
+	//fmt.Fprintln(os.Stderr, "rumprun-makefs.sh" + " " + fname + " " + absDir)
 	if err != nil {
 		return "", errors.Wrap(err, "Unable to run geniso command")
 	}
