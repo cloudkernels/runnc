@@ -49,14 +49,20 @@ func (h *iSOFsHandler) FsDestroyFunc(i *ll.FsDestroyInput) (*ll.LLState, error) 
 func findAllISOs(config *configs.Config) (string, error) {
 	isoPath := config.IsoPaths
 	var isos []string
-	files, err := ioutil.ReadDir(isoPath)
+	dirs, err := ioutil.ReadDir(isoPath)
 	if err != nil {
 		return "",err
 	}
-	for _, f := range files {
-		if filepath.Ext(f.Name()) == ".ffs" {
-			isoFilePath := filepath.Join(isoPath, f.Name())
-			isos = append(isos, isoFilePath)
+	for _, dir := range dirs {
+		files, err := ioutil.ReadDir(filepath.Join(isoPath, dir.Name()))
+		if err != nil {
+			return "",err
+		}
+		for _, f := range files {
+				if filepath.Ext(f.Name()) == ".ffs" {
+					isoFilePath := filepath.Join(isoPath, dir.Name(), f.Name())
+					isos = append(isos, isoFilePath)
+			}
 		}
 	}
 	return strings.Join(isos, ","),nil
