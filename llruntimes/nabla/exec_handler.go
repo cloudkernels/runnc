@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	NablaBinDir = "/opt/runnc/bin/"
-	NablaRunBin = NablaBinDir + "nabla-run"
+	NablaBinDir = ""
+	NablaRunBin = "echo"
 )
 
 type nablaExecHandler struct{}
