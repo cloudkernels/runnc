@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	NablaBinDir = "/opt/runnc/bin/"
-	NablaRunBin = NablaBinDir + "nabla-run"
+	NablaBinDir = ""
+	NablaRunBin = "/bin/echo"
 )
 
 type nablaExecHandler struct{}
@@ -54,7 +54,7 @@ func newRunncCont(containerRoot string, cfg configs.Config, networkMap map[strin
 	}
 
 	if !strings.HasSuffix(cfg.Args[0], ".nabla") {
-		return nil, fmt.Errorf("entrypoint is not a .nabla file")
+		//return nil, fmt.Errorf("entrypoint is not a .nabla file")
 	}
 
 	cidr, err := strconv.Atoi(networkMap["IPMask"])

@@ -21,10 +21,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 	"os/exec"
 	"strconv"
 	"strings"
-	"syscall"
+	//"syscall"
 
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
@@ -132,9 +133,42 @@ func setupDisk(path string) (string, error) {
 	return path, nil
 }
 
+func load(f string) {
+    cmd := exec.Command("/bin/echo", "load|"+f)
+    fmt.Println(cmd)
+    // open the out file for writing
+    outfile, err := os.Create("/proc/monitor")
+    if err != nil {
+        panic(err)
+    }
+    defer outfile.Close()
+    cmd.Stdout = outfile
+    err = cmd.Start(); if err != nil {
+        panic(err)
+    }
+    cmd.Wait()
+}
+
+func execRun(args string) {
+    cmd := exec.Command("/bin/echo", args)
+    fmt.Println(cmd)
+    // open the out file for writing
+    outfile, err := os.Create("/proc/monitor")
+    if err != nil {
+        panic(err)
+    }
+    defer outfile.Close()
+    cmd.Stdout = outfile
+    err = cmd.Start(); if err != nil {
+        panic(err)
+    }
+    cmd.Wait()
+}
+
+
 func (r *RunncCont) Run() error {
 	var (
-		mac string
+		//mac string
 		err error
 	)
 
@@ -153,33 +187,39 @@ func (r *RunncCont) Run() error {
 		r.UniKernelBin = unikernel
 	}
 
+	fmt.Printf("Loading binary %s ...\n", r.UniKernelBin)
+	load(r.UniKernelBin)
+	fmt.Printf("load func return. Proceeding to create Rumprun Args ... \n")
+
 	unikernelArgs, err := CreateRumprunArgs(r.IPAddress, r.IPMask, r.Gateway, "/",
 		r.Env, r.WorkingDir, r.UniKernelBin, r.NablaRunArgs)
 	if err != nil {
 		return fmt.Errorf("could not create the unikernel cmdline: %v\n", err)
 	}
+	//result := strings.Replace(unikernelArgs, "\"", "\\\"", -1)
+	//unikernelArgs = result
 
-	var args []string
-	if mac != "" {
-		args = []string{r.NablaRunBin,
-			"--x-exec-heap",
-			"--mem=" + strconv.FormatInt(r.Memory, 10),
-			"--net-mac=" + mac,
-			"--net=" + r.Tap,
-			"--disk=" + disk,
-			r.UniKernelBin,
-			unikernelArgs}
-	} else {
-		args = []string{r.NablaRunBin,
-			"--x-exec-heap",
-			"--mem=" + strconv.FormatInt(r.Memory, 10),
-			"--net=" + r.Tap,
-			"--disk=" + disk,
-			r.UniKernelBin,
-			unikernelArgs}
-	}
 
-	fmt.Printf("nabla-run arg %s\n", args)
+	fmt.Printf("Rumprun Args: %s\n", unikernelArgs)
+
+        coreid := 3
+	coreidstr := strconv.Itoa(coreid)
+
+	var args string
+	//if mac != "" {
+		args = "start|"+ r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap + "|" + unikernelArgs
+		//args = []string{r.NablaRunBin, "start|" + r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap + "|" + unikernelArgs, ">> /proc/monitor"}
+	//} else {
+	//	args = []string{r.NablaRunBin,
+	//		"--x-exec-heap",
+	//		"--mem=" + strconv.FormatInt(r.Memory, 10),
+	//		"--net=" + r.Tap,
+	//		"--disk=" + disk,
+	//		r.UniKernelBin,
+	//		unikernelArgs}
+	//}
+
+	fmt.Printf("echo arg %s\n", args)
 
 	// Set LD_LIBRARY_PATH to our dynamic libraries
 	env := os.Environ()
@@ -194,10 +234,15 @@ func (r *RunncCont) Run() error {
 	}
 	newenv = append(newenv, "LD_LIBRARY_PATH=/lib64")
 
-	err = syscall.Exec(r.NablaRunBin, args, newenv)
-	if err != nil {
-		return fmt.Errorf("Err from execve: %v\n", err)
-	}
+	//err = cmd.Run("/bin/sh", args)
+	execRun(args)
+	//if err != nil {
+	//	return fmt.Errorf("Err from execve: %v\n", err)
+	//}
 
+	cmd := exec.Command("tail -f ", "/proc/vmcons")
+	fmt.Println(cmd)
+        cmd.Wait()
+	time.Sleep(1024)
 	return nil
 }
