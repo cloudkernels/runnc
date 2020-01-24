@@ -25,7 +25,11 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	//"syscall"
+	//"io"
+
+        "math/rand"
+	"os/signal"
+	"syscall"
 
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
@@ -133,9 +137,24 @@ func setupDisk(path string) (string, error) {
 	return path, nil
 }
 
+func cleanup(f string) {
+    cmd := exec.Command("/bin/echo", "stop|"+f)
+    //fmt.Println(cmd)
+    // open the out file for writing
+    outfile, err := os.Create("/proc/monitor")
+    if err != nil {
+        panic(err)
+    }
+    defer outfile.Close()
+    cmd.Stdout = outfile
+    err = cmd.Start(); if err != nil {
+        panic(err)
+    }
+    cmd.Wait()
+}
 func load(f string) {
     cmd := exec.Command("/bin/echo", "load|"+f)
-    fmt.Println(cmd)
+    //fmt.Println(cmd)
     // open the out file for writing
     outfile, err := os.Create("/proc/monitor")
     if err != nil {
@@ -151,7 +170,7 @@ func load(f string) {
 
 func execRun(args string) {
     cmd := exec.Command("/bin/echo", args)
-    fmt.Println(cmd)
+    //fmt.Println(cmd)
     // open the out file for writing
     outfile, err := os.Create("/proc/monitor")
     if err != nil {
@@ -166,12 +185,28 @@ func execRun(args string) {
 }
 
 
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+    b := make([]rune, n)
+    for i := range b {
+        b[i] = letters[rand.Intn(len(letters))]
+    }
+    return string(b)
+}
+
+func getName()(string) {
+    rand.Seed(time.Now().UnixNano())
+
+    return randSeq(10)
+}
+
 func (r *RunncCont) Run() error {
 	var (
 		//mac string
 		err error
 	)
-
+	vmname := getName()
 	disk, err := setupDisk(r.Disk)
 	if err != nil {
 		return fmt.Errorf("could not setup the disk: %v", err)
@@ -200,14 +235,14 @@ func (r *RunncCont) Run() error {
 	//unikernelArgs = result
 
 
-	fmt.Printf("Rumprun Args: %s\n", unikernelArgs)
+	//fmt.Printf("Rumprun Args: %s\n", unikernelArgs)
 
         coreid := 3
 	coreidstr := strconv.Itoa(coreid)
 
 	var args string
 	//if mac != "" {
-		args = "start|"+ r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap + "|" + unikernelArgs
+		args = "start|"+ vmname +"|"+ r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap + "|" + unikernelArgs
 		//args = []string{r.NablaRunBin, "start|" + r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap + "|" + unikernelArgs, ">> /proc/monitor"}
 	//} else {
 	//	args = []string{r.NablaRunBin,
@@ -219,7 +254,7 @@ func (r *RunncCont) Run() error {
 	//		unikernelArgs}
 	//}
 
-	fmt.Printf("echo arg %s\n", args)
+	//fmt.Printf("echo arg %s\n", args)
 
 	// Set LD_LIBRARY_PATH to our dynamic libraries
 	env := os.Environ()
@@ -240,9 +275,23 @@ func (r *RunncCont) Run() error {
 	//	return fmt.Errorf("Err from execve: %v\n", err)
 	//}
 
-	cmd := exec.Command("tail -f ", "/proc/vmcons")
-	fmt.Println(cmd)
-        cmd.Wait()
-	time.Sleep(1024)
+	//gotail("/proc/vmcons")
+	//cmd := exec.Command("tail -f ", "/proc/vmcons")
+	//fmt.Println(cmd)
+        //cmd.Wait()
+	//time.Sleep(1024)
+    c := make(chan os.Signal)
+    signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+    go func() {
+        <-c
+        cleanup(vmname)
+        os.Exit(1)
+    }()
+
+    for {
+	// Never return, catch the signal
+        //fmt.Println("sleeping...")
+        time.Sleep(10 * time.Second) // or runtime.Gosched() or similar per @misterbee
+    }
 	return nil
 }
