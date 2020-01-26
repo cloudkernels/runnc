@@ -10,6 +10,8 @@ type Config struct {
 	Env    []string `json:"env"`
 	Cwd    string   `json:"cwd"`
 
+	// unikernel bin type: hvt, nabla, mirage
+	Type string
 	// Version is the version of opencontainer specification that is supported.
 	Version string `json:"version"`
 

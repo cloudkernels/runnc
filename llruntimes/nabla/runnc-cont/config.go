@@ -14,6 +14,8 @@ type Config struct {
 	// UniKernelBin is the path to 'unikernel' binary.
 	UniKernelBin string
 
+	Type string
+
 	// Tap tap device. (e.g. tap100)
 	Tap string
 

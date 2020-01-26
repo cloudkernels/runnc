@@ -32,6 +32,8 @@ import (
 	"syscall"
 
 	"github.com/nabla-containers/runnc/nabla-lib/storage"
+	"github.com/nabla-containers/runnc/nabla-lib/network"
+
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
@@ -43,6 +45,8 @@ type RunncCont struct {
 
 	// UniKernelBin is the path to 'unikernel' binary.
 	UniKernelBin string
+
+	Type string
 
 	// Tap tap device. (e.g. tap100)
 	Tap string
@@ -104,6 +108,7 @@ func NewRunncCont(cfg Config) (*RunncCont, error) {
 		NablaRunBin:  cfg.NablaRunBin,
 		NablaRunArgs: cfg.NablaRunArgs,
 		UniKernelBin: cfg.UniKernelBin,
+		Type:	      cfg.Type,
 		Tap:          cfg.Tap,
 		IPAddress:    ipAddress,
 		IPMask:       ipMask,
@@ -241,18 +246,13 @@ func (r *RunncCont) Run() error {
 	coreidstr := strconv.Itoa(coreid)
 
 	var args string
-	//if mac != "" {
+	if (r.Type == "mirage") {
+		cidr := strconv.Itoa(network.MaskCIDR(r.IPMask))
+		unikernelArgs = " --ipv4=" + r.IPAddress.String() + "/"+cidr + " --ipv4-gateway=" + r.Gateway.String()
+		args = "start|"+ vmname +"|"+ r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap  + "|" + unikernelArgs
+	} else {
 		args = "start|"+ vmname +"|"+ r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap + "|" + unikernelArgs
-		//args = []string{r.NablaRunBin, "start|" + r.UniKernelBin + "|" + coreidstr + "|" + strconv.FormatInt(r.Memory, 10) + "|" + disk + "|" + r.Tap + "|" + unikernelArgs, ">> /proc/monitor"}
-	//} else {
-	//	args = []string{r.NablaRunBin,
-	//		"--x-exec-heap",
-	//		"--mem=" + strconv.FormatInt(r.Memory, 10),
-	//		"--net=" + r.Tap,
-	//		"--disk=" + disk,
-	//		r.UniKernelBin,
-	//		unikernelArgs}
-	//}
+	}
 
 	//fmt.Printf("echo arg %s\n", args)
 

@@ -53,8 +53,14 @@ func newRunncCont(containerRoot string, cfg configs.Config, networkMap map[strin
 		return nil, fmt.Errorf("OCI process args are empty")
 	}
 
-	if !strings.HasSuffix(cfg.Args[0], ".nabla") {
-		//return nil, fmt.Errorf("entrypoint is not a .nabla file")
+	if strings.HasSuffix(cfg.Args[0], ".nabla") {
+		cfg.Type = "nabla"
+	}
+	if strings.HasSuffix(cfg.Args[0], ".hvt") {
+		cfg.Type = "hvt"
+	}
+	if strings.HasSuffix(cfg.Args[0], ".mirage") {
+		cfg.Type = "mirage"
 	}
 
 	cidr, err := strconv.Atoi(networkMap["IPMask"])
@@ -66,6 +72,7 @@ func newRunncCont(containerRoot string, cfg configs.Config, networkMap map[strin
 		NablaRunBin:  NablaRunBin,
 		UniKernelBin: filepath.Join(containerRoot, cfg.Args[0]),
 		Memory:       cfg.Memory,
+		Type:         cfg.Type,
 		Tap:          networkMap["TapName"],
 		Disk:         []string{fsMap["FsPath"]},
 		WorkingDir:   cfg.Cwd,
