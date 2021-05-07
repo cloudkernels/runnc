@@ -1,0 +1,19 @@
+diff --git a/llmodules/fs/iso_storage.go b/llmodules/fs/iso_storage.go
+index 949212a..8d40c11 100644
+--- a/llmodules/fs/iso_storage.go
++++ b/llmodules/fs/iso_storage.go
+@@ -54,11 +54,10 @@ func findAllISOs(config *configs.Config) (string, error) {
+                return "",err
+        }
+        for _, f := range files {
+-               isoFilePath := filepath.Join(isoPath, f.Name())
+-               if err != nil {
+-                       return "",err
++               if filepath.Ext(f.Name()) == ".iso" {
++                       isoFilePath := filepath.Join(isoPath, f.Name())
++                       isos = append(isos, isoFilePath)
+                }
+-               isos = append(isos, isoFilePath)
+        }
+        return strings.Join(isos, ","),nil
+ }
